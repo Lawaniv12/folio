@@ -1,8 +1,10 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { BookExportService } from '../../../core/services/book-export.service';
+import { BookExportService, type PdfPageFormat } from '../../../core/services/book-export.service';
 import { Supabase } from '../../../core/services/supabase';
+
+type ExportFormat = 'epub' | 'pdf' | 'kindle';
 
 interface ExportBookOption {
   id: string;
@@ -36,7 +38,9 @@ export class ExportCenter implements OnInit {
 
   protected readonly books = signal<ExportBookOption[]>([]);
   protected readonly exports = signal<ExportHistoryItem[]>([]);
+  protected readonly exportFormat = signal<ExportFormat>('epub');
   protected readonly selectedBookId = signal('');
+  protected readonly pdfPageFormat = signal<PdfPageFormat>('a4');
   protected readonly loading = signal(true);
   protected readonly exporting = signal(false);
   protected readonly downloadingExportId = signal('');
@@ -47,20 +51,60 @@ export class ExportCenter implements OnInit {
     void this.loadData();
   }
 
-  protected async createEpub(): Promise<void> {
+  protected async selectFormat(format: ExportFormat): Promise<void> {
+    this.exportFormat.set(format);
+    this.notice.set('');
+    this.errorMessage.set('');
+    try {
+      await this.loadExports();
+    } catch (error: unknown) {
+      this.errorMessage.set(error instanceof Error ? error.message : `Unable to load ${format} export history.`);
+    }
+  }
+
+  protected get formatTitle(): string {
+    switch (this.exportFormat()) {
+      case 'pdf': return 'Export a PDF';
+      case 'kindle': return 'Export a Kindle Package';
+      default: return 'Export an EPUB';
+    }
+  }
+
+  protected get exportButtonLabel(): string {
+    switch (this.exportFormat()) {
+      case 'pdf': return 'Export PDF';
+      case 'kindle': return 'Coming Soon';
+      default: return 'Export EPUB';
+    }
+  }
+
+  protected get historyTitle(): string {
+    const format = this.exportFormat();
+    return `Recent ${format === 'kindle' ? 'Kindle' : format.toUpperCase()} Exports`;
+  }
+
+  protected get formatName(): string {
+    const format = this.exportFormat();
+    return format === 'kindle' ? 'Kindle package' : format.toUpperCase();
+  }
+
+  protected async createExport(): Promise<void> {
     const bookId = this.selectedBookId();
-    if (!bookId || this.exporting()) return;
+    const format = this.exportFormat();
+    if (!bookId || this.exporting() || format === 'kindle') return;
 
     this.exporting.set(true);
     this.errorMessage.set('');
-    this.notice.set('Generating your EPUB…');
+    this.notice.set(`Generating your ${format.toUpperCase()}…`);
     try {
-      const generated = await this.bookExport.exportEpub(bookId);
+      const generated = format === 'pdf'
+        ? await this.bookExport.exportPdf(bookId, this.pdfPageFormat())
+        : await this.bookExport.exportEpub(bookId);
       this.notice.set(`${generated.fileName} is ready to download.`);
       await this.loadExports();
     } catch (error: unknown) {
       this.notice.set('');
-      this.errorMessage.set(error instanceof Error ? error.message : 'Unable to create this EPUB.');
+      this.errorMessage.set(error instanceof Error ? error.message : `Unable to create this ${format.toUpperCase()}.`);
     } finally {
       this.exporting.set(false);
     }
@@ -71,9 +115,11 @@ export class ExportCenter implements OnInit {
     this.downloadingExportId.set(item.id);
     this.errorMessage.set('');
     try {
-      await this.bookExport.downloadEpub(item.file_url, `${this.fileSlug(item.bookTitle)}-v${item.version}.epub`);
+      const fileName = `${this.fileSlug(item.bookTitle)}-v${item.version}.${item.format}`;
+      if (item.format === 'pdf') await this.bookExport.downloadPdf(item.file_url, fileName);
+      else await this.bookExport.downloadEpub(item.file_url, fileName);
     } catch (error: unknown) {
-      this.errorMessage.set(error instanceof Error ? error.message : 'Unable to download this EPUB.');
+      this.errorMessage.set(error instanceof Error ? error.message : `Unable to download this ${item.format.toUpperCase()}.`);
     } finally {
       this.downloadingExportId.set('');
     }
@@ -125,7 +171,7 @@ export class ExportCenter implements OnInit {
       .from('exports')
       .select('id, book_id, format, template_used, version, file_url, file_size, status, created_at, generation_time_ms')
       .in('book_id', ownedBookIds)
-      .eq('format', 'epub')
+      .eq('format', this.exportFormat())
       .order('created_at', { ascending: false });
     this.logQueryResult('exports history query', data, error);
     if (error) throw error;

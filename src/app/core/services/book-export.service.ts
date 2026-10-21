@@ -403,8 +403,9 @@ export class BookExportService {
       pdf.setFont('times', 'normal');
       pdf.setFontSize(typography.bodyFontPt);
       textColor(colors.ink);
-      for (const [paragraphIndex, paragraph] of chapter.paragraphs.entries()) {
-        const lines = pdf.splitTextToSize(paragraph, bodyWidth - (paragraphIndex ? 5 : 0)) as string[];
+      const paragraphIndentMm = typography.bodyFontPt * 1.4 * 25.4 / 72;
+      for (const paragraph of chapter.paragraphs) {
+        const lines = pdf.splitTextToSize(paragraph, bodyWidth - paragraphIndentMm) as string[];
         let offset = 0;
         while (offset < lines.length) {
           const count = Math.floor((bottomLimit - y - typography.paragraphSpacingMm) / typography.bodyLineHeightMm);
@@ -417,7 +418,10 @@ export class BookExportService {
             continue;
           }
           const segment = lines.slice(offset, offset + count);
-          pdf.text(segment, margin + (paragraphIndex && offset === 0 ? 5 : 0), y);
+          segment.forEach((line, lineIndex) => {
+            const indent = offset === 0 && lineIndex === 0 ? paragraphIndentMm : 0;
+            pdf.text(line, margin + indent, y + lineIndex * typography.bodyLineHeightMm);
+          });
           y += segment.length * typography.bodyLineHeightMm;
           offset += segment.length;
           if (offset < lines.length) {
@@ -526,7 +530,7 @@ export class BookExportService {
   private epubStyles(preview: FormattedPreview): string {
     const { typography, colors } = preview.presentation;
     const margin = typography.pageMarginMm / 5;
-    return `body{font-family:${typography.bodyFontFamily};font-size:${typography.bodyFontPt}pt;line-height:${typography.bodyLineHeightMm / typography.bodyFontPt};color:${colors.ink};background:${colors.paper};margin:${margin}%;}h1{text-align:center;font-family:${typography.headingFontFamily};font-size:${typography.chapterTitleFontPt}pt;font-weight:normal;line-height:1.2;margin:2em 0;color:${colors.ink};}.overline,.chapter-label{color:${colors.accent};text-align:center;text-indent:0;font:small sans-serif;letter-spacing:.14em;}.title-page{display:flex;min-height:80vh;flex-direction:column;justify-content:center;text-align:center;break-after:page;}.title-page .overline,.title-page .author,.title-page .imprint{text-indent:0;}.title-page .author{font-style:italic;font-size:1.25em;}.title-page .imprint{font-size:small;color:${colors.muted};}.title-rule{text-align:center;color:${colors.accent};margin:1em 0;border-top:1px solid ${colors.rule};padding-top:.5em;}.toc{break-after:page;}.toc h1{font-size:${typography.contentsTitleFontPt}pt;}.toc ol{list-style:none;padding:0;}.toc li{margin:1em 0;border-bottom:1px dotted ${colors.rule};}.toc li a{display:flex;gap:1em;color:inherit;text-decoration:none;}.toc li a span:first-child{font-size:small;color:${colors.accent};}.toc li a span:last-child{flex:1;}p{text-indent:1.2em;margin:.6em 0;line-height:${typography.bodyLineHeightMm / typography.bodyFontPt};}.chapter{break-before:page;}.chapter-label{text-indent:0;}`;
+    return `body{font-family:${typography.bodyFontFamily};font-size:${typography.bodyFontPt}pt;line-height:${typography.bodyLineHeightMm / typography.bodyFontPt};color:${colors.ink};background:${colors.paper};margin:${margin}%;}h1{text-align:center;font-family:${typography.headingFontFamily};font-size:${typography.chapterTitleFontPt}pt;font-weight:normal;line-height:1.2;margin:2em 0;color:${colors.ink};}.overline,.chapter-label{color:${colors.accent};text-align:center;text-indent:0;font:small sans-serif;letter-spacing:.14em;}.title-page{display:flex;min-height:80vh;flex-direction:column;justify-content:center;text-align:center;break-after:page;}.title-page .overline,.title-page .author,.title-page .imprint{text-indent:0;}.title-page .author{font-style:italic;font-size:1.25em;}.title-page .imprint{font-size:small;color:${colors.muted};}.title-rule{text-align:center;color:${colors.accent};margin:1em 0;border-top:1px solid ${colors.rule};padding-top:.5em;}.toc{break-after:page;}.toc h1{font-size:${typography.contentsTitleFontPt}pt;}.toc ol{list-style:none;padding:0;}.toc li{margin:1em 0;border-bottom:1px dotted ${colors.rule};}.toc li a{display:flex;gap:1em;color:inherit;text-decoration:none;}.toc li a span:first-child{font-size:small;color:${colors.accent};}.toc li a span:last-child{flex:1;}p{text-indent:1.4em;margin:.6em 0;line-height:${typography.bodyLineHeightMm / typography.bodyFontPt};}.chapter{break-before:page;}.chapter-label{text-indent:0;}`;
   }
 
   private fileSlug(title: string): string {

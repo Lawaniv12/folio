@@ -14,30 +14,30 @@
 		<div class="reader-layout">
 			<aside class="reader-outline" aria-label="Book contents">
 				<div class="outline-heading"><span class="outline-label">IN THIS BOOK</span><span class="outline-count">{{ bookPreview.chapters.length }} SECTIONS</span></div>
-				<button class="outline-link title-outline" type="button" (click)="scrollToChapter(bookPreview.presentation.chapters[0].id)"><span class="outline-number">✦</span><span>Title page & contents</span></button>
-				@for (chapter of bookPreview.presentation.tableOfContents; track chapter.id) {
+				<button class="outline-link title-outline" type="button" (click)="scrollToChapter(bookPreview.chapters[0].id)"><span class="outline-number">✦</span><span>Title page & contents</span></button>
+				@for (chapter of bookPreview.tableOfContents; track chapter.id) {
 					<button class="outline-link" type="button" [class.outline-active]="activeChapterId() === chapter.id" (click)="scrollToChapter(chapter.id)"><span class="outline-number">{{ chapter.chapterLabel ? chapter.chapterLabel.replace('CHAPTER ', '') : '—' }}</span><span>{{ chapter.title }}</span><small>{{ chapter.firstPage }}</small></button>
 				}
 			</aside>
 
 			<main class="reader-stage" aria-label="Ebook preview">
 				<div class="reader-caption"><span>PREVIEWING YOUR BOOK</span><span>{{ bookPreview.book.template | uppercase }} · {{ bookPreview.book.source_format | uppercase }}</span></div>
-				<article class="ebook-paper" [style.--paper-color]="bookPreview.presentation.colors.paper" [style.--paper-ink]="bookPreview.presentation.colors.ink" [style.--paper-muted]="bookPreview.presentation.colors.muted" [style.--paper-accent]="bookPreview.presentation.colors.accent" [style.--paper-rule]="bookPreview.presentation.colors.rule" [style.--body-font-family]="bookPreview.presentation.typography.bodyFontFamily" [style.--heading-font-family]="bookPreview.presentation.typography.headingFontFamily" [style.--body-size]="bookPreview.presentation.typography.bodyFontPt + 'pt'" [style.--body-leading]="bookPreview.presentation.typography.bodyLineHeightMm + 'mm'" [style.--chapter-title-size]="bookPreview.presentation.typography.chapterTitleFontPt + 'pt'" [style.--chapter-label-size]="bookPreview.presentation.typography.chapterLabelFontPt + 'pt'" [style.--title-size]="bookPreview.presentation.typography.titleFontPt + 'pt'" [style.--contents-title-size]="bookPreview.presentation.typography.contentsTitleFontPt + 'pt'">
+				<article class="ebook-paper">
 					<section class="title-page" aria-labelledby="preview-book-title">
-						<div class="title-ornament"><span></span><i>{{ bookPreview.presentation.titlePage.ornament }}</i><span></span></div>
-						<p class="title-overline">{{ bookPreview.presentation.titlePage.overline }}</p>
-						<h1 id="preview-book-title">{{ bookPreview.presentation.titlePage.title }}</h1>
+						<div class="title-ornament"><span></span><i>✦</i><span></span></div>
+						<p class="title-overline">A FOLIO READER EDITION</p>
+						<h1 id="preview-book-title">{{ bookPreview.book.title }}</h1>
 						<div class="title-rule"></div>
-						<p class="title-author">{{ bookPreview.presentation.titlePage.author }}</p>
-						<div class="title-publisher">{{ bookPreview.presentation.titlePage.imprint }}</div>
+						<p class="title-author">{{ bookPreview.book.author_name }}</p>
+						<div class="title-publisher">FOLIO <span>·</span> AUTHOR STUDIO</div>
 					</section>
 
 					<section class="paper-toc" aria-labelledby="preview-toc-title">
-						<p class="paper-kicker">{{ bookPreview.presentation.contentsPage.overline }}</p><h2 id="preview-toc-title">{{ bookPreview.presentation.contentsPage.title }}</h2>
-						<ol>@for (chapter of bookPreview.presentation.tableOfContents; track chapter.id) {<li><button type="button" (click)="scrollToChapter(chapter.id)">@if (chapter.chapterLabel) { <span class="paper-chapter-label">{{ chapter.chapterLabel }}</span> }@if (chapter.title) { <span class="paper-chapter-title">{{ chapter.title }}</span> }<span class="paper-leader"></span><span class="paper-page-number">{{ chapter.firstPage }}</span></button></li>}</ol>
+						<p class="paper-kicker">CONTENTS</p><h2 id="preview-toc-title">Inside this book</h2>
+						<ol>@for (chapter of bookPreview.tableOfContents; track chapter.id) {<li><button type="button" (click)="scrollToChapter(chapter.id)">@if (chapter.chapterLabel) { <span class="paper-chapter-label">{{ chapter.chapterLabel }}</span> }<span class="paper-chapter-title">{{ chapter.title }}</span><span class="paper-leader"></span><span class="paper-page-number">{{ chapter.firstPage }}</span></button></li>}</ol>
 					</section>
 
-					@for (chapter of bookPreview.presentation.chapters; track chapter.id) {
+					@for (chapter of bookPreview.chapters; track chapter.id) {
 						<section class="paper-chapter" [id]="'chapter-' + chapter.id" [attr.aria-labelledby]="'chapter-heading-' + chapter.id">
 							@if (chapter.chapterLabel) { <p class="chapter-kicker">{{ chapter.chapterLabel }}</p> }
 							<h2 [id]="'chapter-heading-' + chapter.id">{{ chapter.title }}</h2>
