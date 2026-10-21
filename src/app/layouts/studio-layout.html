@@ -1,0 +1,9 @@
+<div class="studio-shell">
+  <app-studio-sidebar [open]="sidebarOpen()" (closeMenu)="closeSidebar()"></app-studio-sidebar>
+  <main class="main-area">
+    <app-studio-navbar (menuClick)="openSidebar()"></app-studio-navbar>
+    <div class="dashboard-content">
+      <router-outlet />
+    </div>
+  </main>
+</div>

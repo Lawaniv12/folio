@@ -1,0 +1,17 @@
+<section class="page-intro"><div><p class="eyebrow">{{ profile().publisherName }} · LIBRARY</p><h1>My books</h1><p class="welcome-subtitle">Every manuscript, beautifully organized and ready for its next chapter.</p></div><a class="button-primary" routerLink="/upload">＋ Add a manuscript</a></section>
+<div class="library-toolbar"><label class="library-search"><span aria-hidden="true">⌕</span><input type="search" placeholder="Search by title, author or status" [value]="query()" (input)="query.set($any($event.target).value)"></label><div class="filter-pills">@for (option of statuses(); track option) {<button type="button" [class.selected]="filter() === option" (click)="filter.set(option)">{{ option }}</button>}</div></div>
+<section class="library-grid" aria-label="Your books">
+	@if (loading()) {
+		<div class="library-state"><span class="library-spinner"></span><h2>Loading your library</h2><p>Fetching the books in your studio.</p></div>
+	} @else if (errorMessage()) {
+		<div class="library-state library-state-error" role="alert"><span>!</span><h2>We couldn’t load your books</h2><p>{{ errorMessage() }}</p><button type="button" (click)="reloadBooks()">Try again</button></div>
+	} @else if (books().length === 0) {
+		<div class="library-state"><span>✦</span><h2>Your library is ready for a first draft</h2><p>Upload a DOCX manuscript and it will appear here, ready to format and preview.</p><a class="button-primary" routerLink="/upload">＋ Upload a manuscript</a></div>
+	} @else if (filteredBooks().length === 0) {
+		<div class="library-state"><span>⌕</span><h2>No books match those filters</h2><p>Try another title, author, or status.</p><button type="button" (click)="query.set(''); filter.set('All books')">Clear filters</button></div>
+	} @else {
+		@for (book of filteredBooks(); track book.id; let index = $index) {
+			<article class="library-card"><div class="library-cover-stage"><div class="book-cover" [class]="'book-cover cover-' + (index % 4)"><div class="cover-decoration"></div><span class="cover-overline">{{ profile().publisherName }}</span><strong>{{ book.title }}</strong><span class="cover-rule"></span><small>{{ book.author_name }}</small><span class="cover-publisher">FOLIO · STUDIO</span></div></div><div class="library-book-copy"><span class="library-status" [class.status-ready]="book.status.toLowerCase() === 'ready' || book.status.toLowerCase() === 'complete'" [class.status-progress]="book.status.toLowerCase() === 'processing' || book.status.toLowerCase() === 'formatting'">{{ book.status }}</span><h2>{{ book.title }}</h2><p>{{ book.author_name }}</p><div class="library-meta"><span>{{ book.total_words | number }} words</span><span>{{ book.created_at | date:'mediumDate' }}</span></div><div class="library-actions"><a class="button-secondary" [routerLink]="['/books', book.id]">Open book</a><a class="button-primary" [routerLink]="['/books', book.id, 'preview']">Preview</a></div></div></article>
+		}
+	}
+</section>

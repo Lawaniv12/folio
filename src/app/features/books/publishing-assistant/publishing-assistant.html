@@ -1,0 +1,72 @@
+<section class="assistant-page">
+  <header class="assistant-header">
+    <a class="assistant-back" [routerLink]="['/books', bookId]">← Back to book</a>
+    <span class="assistant-private"><span>✦</span> EDITORIAL WORKSPACE</span>
+  </header>
+
+  <main class="assistant-content">
+    <section class="assistant-hero">
+      <div class="assistant-hero-copy">
+        <p class="assistant-eyebrow">AI PUBLISHING ASSISTANT</p>
+        <h1>Publish with a clearer point of view.</h1>
+        <p>Get an editorial assessment of your book’s structure, consistency, readability, and publishing readiness—without rewriting your manuscript.</p>
+      </div>
+      <div class="assistant-hero-mark" aria-hidden="true"><span>✦</span><i></i></div>
+    </section>
+
+    <section class="privacy-card" aria-label="Manuscript privacy and AI consent">
+      <div class="privacy-icon" aria-hidden="true">⌑</div>
+      <div class="privacy-copy"><strong>Your words stay yours.</strong><p>Analysis and asset requests send your book text to the configured AI provider. Chapter text is analyzed for feedback; the assistant must not rewrite or replace it. Requests are processed on demand and are not saved as book edits.</p></div>
+      <label class="consent-toggle"><input type="checkbox" [checked]="consent()" (change)="setConsent($event)"><span class="toggle-track"></span><span>I consent to sharing this manuscript for this request</span></label>
+    </section>
+
+    @if (errorMessage()) { <div class="assistant-alert" role="alert"><span>!</span>{{ errorMessage() }}</div> }
+    @if (notice()) { <div class="assistant-notice" role="status">{{ notice() }}</div> }
+
+    <div class="assistant-grid">
+      <div class="assistant-primary-column">
+        <section class="assistant-card analysis-card">
+          <div class="card-heading"><div><p class="assistant-eyebrow">EDITORIAL REVIEW</p><h2>Analyze book</h2><p>Receive a practical assessment, not a rewrite.</p></div><span class="card-icon">✧</span></div>
+          <div class="review-list">
+            <span>Book structure</span><span>Chapter consistency</span><span>Formatting consistency</span><span>Readability</span><span>Front matter</span><span>TOC & headings</span><span>Publishing readiness</span>
+          </div>
+          <button class="assistant-primary-button" type="button" [disabled]="analyzing() || !consent()" (click)="analyzeBook()">{{ analyzing() ? 'Reviewing your book…' : analysis() ? 'Run analysis again' : 'Analyze book' }} <span>→</span></button>
+          @if (!consent()) { <p class="button-hint">Consent above to enable a manuscript review.</p> }
+        </section>
+
+        @if (analysis(); as review) {
+          <section class="assistant-card results-card" aria-live="polite">
+            <div class="results-topline"><div><p class="assistant-eyebrow">EDITORIAL SNAPSHOT</p><h2>Publishing readiness</h2></div><div class="score-ring" [class.score-strong]="scoreTone() === 'strong'" [class.score-developing]="scoreTone() === 'developing'" [class.score-needs-work]="scoreTone() === 'needs-work'"><strong>{{ review.score }}</strong><span> / 100</span></div></div>
+            <div class="category-grid">
+              @for (category of categories; track category.key) {
+                <article class="category-score"><div><strong>{{ category.label }}</strong><span>{{ review.categories[category.key].score }}/100</span></div><div class="score-track"><span [style.width.%]="review.categories[category.key].score"></span></div><p>{{ review.categories[category.key].summary }}</p></article>
+              }
+            </div>
+            <div class="review-sections">
+              <section class="review-section"><h3><span class="strength-dot">+</span> Strengths</h3>@if (review.strengths.length) { <ul>@for (strength of review.strengths; track $index) { <li>{{ strength }}</li> }</ul> } @else { <p>No specific strengths were returned.</p> }</section>
+              <section class="review-section"><h3><span class="issue-dot">!</span> Issues found</h3>@if (review.issuesFound.length) { <ul class="issue-list">@for (issue of review.issuesFound; track $index) { <li><span class="severity" [class]="'severity ' + issue.severity">{{ issue.severity }}</span><div><strong>{{ issue.title }}</strong><p>{{ issue.detail }}</p></div></li> }</ul> } @else { <p>No significant issues were identified in this review.</p> }</section>
+              <section class="review-section"><h3><span class="recommendation-dot">↗</span> Recommendations</h3>@if (review.recommendations.length) { <ol>@for (recommendation of review.recommendations; track $index) { <li>{{ recommendation }}</li> }</ol> } @else { <p>No additional recommendations were returned.</p> }</section>
+            </div>
+            <p class="editorial-disclaimer">Editorial guidance only. Review suggestions against your intent and publishing requirements; this is not legal or platform-policy advice.</p>
+          </section>
+        }
+      </div>
+
+      <aside class="assistant-card assets-card">
+        <div class="card-heading"><div><p class="assistant-eyebrow">OPTIONAL DRAFTS</p><h2>Publishing assets</h2><p>Generate only the asset you select. Your manuscript is never changed.</p></div><span class="card-icon">✧</span></div>
+        <label class="asset-select-label" for="assetType">Choose an asset</label>
+        <select id="assetType" [value]="selectedAsset()" [disabled]="generatingAsset()" (change)="setAsset($event)">@for (asset of assets; track asset.value) { <option [value]="asset.value">{{ asset.label }}</option> }</select>
+        <p class="asset-description">{{ selectedAssetDescription }}</p>
+        <button class="assistant-secondary-button" type="button" [disabled]="generatingAsset() || !consent()" (click)="generateAsset()">{{ generatingAsset() ? 'Creating draft…' : 'Generate selected asset' }} <span>＋</span></button>
+        @if (generatedAssets().length) {
+          <div class="generated-assets"><h3>Your drafts</h3>
+            @for (asset of generatedAssets(); track asset.assetType) {
+              <article class="generated-asset"><div class="generated-asset-heading"><strong>{{ asset.title }}</strong><button type="button" (click)="copyAsset(asset.content)" [attr.aria-label]="'Copy ' + asset.title">Copy</button></div>@if (asset.caveat) { <p class="asset-caveat">{{ asset.caveat }}</p> }<pre>{{ asset.content }}</pre></article>
+            }
+          </div>
+        }
+      </aside>
+    </div>
+    <p class="assistant-footer-note">This assistant recommends editorial improvements. It does not edit, replace, or rewrite manuscript chapters.</p>
+  </main>
+</section>

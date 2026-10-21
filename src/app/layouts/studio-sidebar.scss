@@ -1,0 +1,6 @@
+:host { display: contents; }
+.logout-button { display:grid; width:29px; height:29px; flex:none; place-items:center; margin-left:auto; border:1px solid transparent; border-radius:7px; background:transparent; color:#8995a9; cursor:pointer; transition:background .18s ease,color .18s ease,border-color .18s ease; }
+.logout-button:hover:not(:disabled) { border-color:rgba(248,113,133,.16); background:rgba(244,63,94,.1); color:#f0a0ad; }
+.logout-button:disabled { cursor:wait; opacity:.55; }
+.logout-button svg { width:16px; height:16px; }
+.logout-error { margin:7px 3px 0; color:#f29aa6; font-size:8px; line-height:1.45; }
